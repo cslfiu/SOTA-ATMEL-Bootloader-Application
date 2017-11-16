@@ -120,13 +120,14 @@ const unsigned char key[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xa
 #undef ENABLE_MONITOR
 
 
-
-// #if defined(_MEGA_BOARD_) || defined(_BOARD_AMBER128_) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) \
-// 	|| defined(__AVR_ATmega2561__) || defined(__AVR_ATmega1284P__) || defined(ENABLE_MONITOR)
-// 	#undef		ENABLE_MONITOR
-// 	#define		ENABLE_MONITOR
-// 	static void	RunMonitor(void);
-// #endif
+/*
+#if defined(_MEGA_BOARD_) || defined(_BOARD_AMBER128_) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+	|| defined(__AVR_ATmega2561__) || defined(__AVR_ATmega1284P__) || defined(ENABLE_MONITOR)
+	#undef		ENABLE_MONITOR
+	#define		ENABLE_MONITOR
+	static void	RunMonitor(void);
+#endif
+*/
 
 #ifndef EEWE
 	#define EEWE    1
@@ -415,7 +416,6 @@ const unsigned char key[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xa
 /*
  * States used in the encrypted command packet stage.
  */
-#define 	SOTA_MESSAGE_START 0x58
  #define	SOTA_PACKET_RETRIEVE_START		0
  #define  SOTA_PACKET_RETRIEVE_SIZE    1
  #define	SOTA_PACKET_RETRIEVE_PROCESSING		2
@@ -878,6 +878,7 @@ static void BlockCopy(unsigned char* output, const unsigned char* input)
 static void aes_decrypt(unsigned char* output, unsigned char* input, unsigned int length)
 {
 	uintptr_t i;
+
   uint8_t extra = length % BLOCKLEN; /* Remaining bytes in the last non-full block */
 
   // Skip the key expansion if key is passed as 0
@@ -886,13 +887,17 @@ static void aes_decrypt(unsigned char* output, unsigned char* input, unsigned in
     Key = key;
     KeyExpansion();
   }
-
+	// sendchar(0x16);
+	// PrintDecInt(length,10);
+	// sendchar(0x17);
   // If iv is passed as 0, we continue to encrypt without re-setting the Iv
   if (iv != 0)
   {
     Iv = (uint8_t*)iv;
   }
-
+	// sendchar(0x18);
+	// PrintDecInt(length,10);
+	// sendchar(0x19);
   for (i = 0; i < length; i += BLOCKLEN)
   {
     memcpy(output, input, BLOCKLEN);
@@ -903,13 +908,16 @@ static void aes_decrypt(unsigned char* output, unsigned char* input, unsigned in
     input += BLOCKLEN;
     output += BLOCKLEN;
   }
-
+	// sendchar(0x20);
+	// PrintDecInt(length,10);
+	// sendchar(0x21);
   if (extra)
   {
     memcpy(output, input, extra);
     state = (state_t*)output;
     InvCipher();
   }
+
 }
 
 static void aes_encrypt(unsigned char* output, unsigned char* input, unsigned int length){
@@ -1136,25 +1144,47 @@ void (*app_start)(void) = 0x0000;
   0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03,
   0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03,
 	0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03 };
+
+	// unsigned char dummyArray[256] = {
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87,
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87,
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87,
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87,
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87,
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87,
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87,
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87,
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87,
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87,
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87,
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87,
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87,
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87,
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87,
+	// 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87};
+
 //*****************************************************************************
 
 	unsigned char authenticationToken[4] = {0x53, 0xef, 0x34,0x23};
-
-union{
+ 	unsigned char isAuthenticated = 0;
+	unsigned int  packetSize = 0;
+  union {
 	uint32_t  authenticationNumber;
-	uint8_t authBytes[4]
+	uint8_t authBytes[4];
 }authenticationNumber;
+
+address_t		address			=	0;
 
 #define AUTHENTICATION
 
 int main(void)
 {
-  unsigned char  packetSize = 0;
+
 	unsigned int residualNumber = 0;
   unsigned char packetRetrieveState;
   packetRetrieveState = SOTA_PACKET_RETRIEVE_START;
   int packetRetrieveIndex = 0;
-	address_t		address			=	0;
+
 	address_t		eraseAddress	=	0;
 	unsigned char	msgParseState;
 	unsigned int	ii				=	0;
@@ -1163,7 +1193,7 @@ int main(void)
 	unsigned int	msgLength		=	0;
 	unsigned char	msgBuffer[285];
 
-	unsigned char isAuthenticated = 0x00;
+
 	unsigned int finalResponseSize;
 
 	unsigned int receivedPacketIndex = 0;
@@ -1257,7 +1287,6 @@ int main(void)
 	{
 		while (!isLeave)
 		{
-
 			packetRetrieveIndex = 0;
 		  packetRetrieveState = SOTA_PACKET_RETRIEVE_START;
 		   while ( packetRetrieveState != SOTA_PACKET_RETRIEVE_FINISHED )
@@ -1273,14 +1302,22 @@ int main(void)
 		     }
 		     else if(packetRetrieveState == SOTA_PACKET_RETRIEVE_SIZE)
 		     {
+
+
 		       unsigned char lowest = getData(&boot_state);
 
 		       packetSize 	=	((c)<<8) | lowest; // ok
+					 // sendchar(0x50);
+					 // sendchar(c);
+						// sendchar(0x51);
+						// sendchar(lowest);
+
 		       packetRetrieveState = SOTA_PACKET_RETRIEVE_PROCESSING;
 
 		     }
 		     else if(packetRetrieveState == SOTA_PACKET_RETRIEVE_PROCESSING)
 		     {
+
 		       if(packetRetrieveIndex < packetSize){
 		       receivedPacket[packetRetrieveIndex] = c;
 		  		//sendchar(c);
@@ -1297,17 +1334,20 @@ int main(void)
 			// sendchar(0x59);
 			// PrintDecInt(packetSize,10);
 			// sendchar(0x60);
-				#ifdef ECHO_INTEGRITY
-				for(int i=0; i <packetSize; i++)
-				sendchar(receivedPacket[i]);
-				#endif
+				// #ifdef ECHO_INTEGRITY
+				// for(int i=0; i <packetSize; i++)
+				// sendchar(receivedPacket[i]);
+				// #endif
 
+// PrintDecInt(packetSize,10);
+// sendchar(0x98);
 
 		   aes_decrypt(aes_buffer, receivedPacket, packetSize);
   // sendchar(0x34);
 
- // for(int i=0; i<packetSize;i++)
- // sendchar(aes_buffer[i]);
+
+// PrintDecInt(packetSize,10);
+
  // sendchar(0x99);
 
 
@@ -1333,20 +1373,20 @@ int main(void)
 					}
 					case ST_GET_SEQ_NUM:{
 					// #ifdef _FIX_ISSUE_505_
-					// 	seqNum			=	c;
-					// 	msgParseState	=	ST_MSG_SIZE_1;
-					// 	checksum		^=	c;
+						seqNum			=	c;
+						msgParseState	=	ST_MSG_SIZE_1;
+						checksum		^=	c;
 					// #else
-						if ( (c == 1) || (c == seqNum) )
-						{
-							seqNum			=	c;
-							msgParseState	=	ST_MSG_SIZE_1;
-							checksum		^=	c;
-						}
-						else
-						{
-							msgParseState	=	ST_START;
-						}
+						// if ( (c == 1) || (c == seqNum) )
+						// {
+						// 	seqNum			=	c;
+						// 	msgParseState	=	ST_MSG_SIZE_1;
+						// 	checksum		^=	c;
+						// }
+						// else
+						// {
+						// 	msgParseState	=	ST_START;
+						// }
 					// #endif
 						break;
 					}
@@ -1411,8 +1451,7 @@ int main(void)
 			 * Now process the STK500 commands, see Atmel Appnote AVR068
 			 */
 
-			// 	for(int i=0; i<msgLength;i++)
-			// 	sendchar(msgBuffer[i]);
+
 			// sendchar(0x61);
 /*
 
@@ -1422,6 +1461,10 @@ union{
 }authenticationToken;
 
 */
+
+// sendchar(0x99);
+// sendchar(msgBuffer[0]);
+// sendchar(0x98);
 
 			switch (msgBuffer[0])
 			{
@@ -1444,18 +1487,18 @@ union{
 						msgBuffer[0] = STATUS_CMD_OK;
 						msgBuffer[1] = authenticationNumber.authBytes[0];
 						msgBuffer[2] = authenticationNumber.authBytes[1];
-						msgBuffer[3] = authenticationNumber.authBytes[2];
 						msgBuffer[4] = authenticationNumber.authBytes[3];
 
 						msgLength = 5;
-						isAuthenticated = 0x01;
+						isAuthenticated = 1;
 
 					}
 					else
 					{
 							msgBuffer[0] = STATUS_CMD_FAILED;
 							msgLength = 1;
-							isAuthenticated = 0x00;
+							isAuthenticated = 0;
+
 					}
 					break;
 				}
@@ -1463,7 +1506,7 @@ union{
 	#ifndef REMOVE_CMD_SPI_MULTI
 				case CMD_SPI_MULTI:
 					{
-						if(isAuthenticated){
+						if(isAuthenticated == 1){
 						unsigned char answerByte;
 						unsigned char flag=0;
 
@@ -1524,8 +1567,8 @@ union{
 	#endif
 				case CMD_SIGN_ON:
 				{
-					if(isAuthenticated){
-					// sendchar(0x62);
+					 if(isAuthenticated == 1){
+
 					msgLength		=	11;
 					msgBuffer[1] 	=	STATUS_CMD_OK;
 					msgBuffer[2] 	=	8;
@@ -1549,7 +1592,6 @@ union{
 				case CMD_GET_PARAMETER:
 					{
 						unsigned char value;
-
 						switch(msgBuffer[1])
 						{
 						case PARAM_BUILD_NUMBER_LOW:
@@ -1577,18 +1619,21 @@ union{
 					}
 					break;
 
-				case CMD_LEAVE_PROGMODE_ISP:
-					isLeave	=	1;
-					//*	fall thru
+				case CMD_LEAVE_PROGMODE_ISP:{
 
+					isLeave	=	1;
+					msgLength		=	2;
+					msgBuffer[1]	=	STATUS_CMD_OK;
+					break;
+				}
 				case CMD_SET_PARAMETER:
-				case CMD_ENTER_PROGMODE_ISP:
-				if(isAuthenticated){
+				case CMD_ENTER_PROGMODE_ISP:{
+				if(isAuthenticated == 1){
 					msgLength		=	2;
 					msgBuffer[1]	=	STATUS_CMD_OK;
 				}
 					break;
-
+				}
 				case CMD_READ_SIGNATURE_ISP:
 					{
 						unsigned char signatureIndex	=	msgBuffer[4];
@@ -1659,76 +1704,79 @@ union{
 					msgBuffer[1]	=	STATUS_CMD_FAILED;	//*	isue 543, return FAILED instead of OK
 					break;
 
-				case CMD_LOAD_ADDRESS:
-	#if defined(RAMPZ)
-					address	=	( ((address_t)(msgBuffer[1])<<24)|((address_t)(msgBuffer[2])<<16)|((address_t)(msgBuffer[3])<<8)|(msgBuffer[4]) )<<1;
-	#else
-					address	=	( ((msgBuffer[3])<<8)|(msgBuffer[4]) )<<1;		//convert word to byte address
-	#endif
-					msgLength		=	2;
-					msgBuffer[1]	=	STATUS_CMD_OK;
-					break;
-
-				case CMD_PROGRAM_FLASH_ISP:
-				case CMD_PROGRAM_EEPROM_ISP:
+					case CMD_LOAD_ADDRESS:
 					{
-						if(isAuthenticated){
-						unsigned int	size	=	((msgBuffer[1])<<8) | msgBuffer[2]; // ok
-						unsigned char	*p	=	msgBuffer+10;
-
-						unsigned int	data;
-						unsigned char	highByte, lowByte;
-
-						address_t		tempaddress	=	address;
-
-	  					if ( msgBuffer[0] == CMD_PROGRAM_FLASH_ISP )
-						{
-							// erase only main section (bootloader protection)
-							if (eraseAddress < APP_END )
-							{
-								boot_page_erase(eraseAddress);	// Perform page erase
-								boot_spm_busy_wait();		// Wait until the memory is erased.
-								eraseAddress += SPM_PAGESIZE;	// point to next page to be erase
-							}
-
-							/* Write FLASH */
-							do {
-
-								lowByte		=	*p++;
-								highByte 	=	*p++;
-
-								data		=	(highByte << 8) | lowByte;
-								boot_page_fill(address,data);
-
-								address	=	address + 2;	// Select next word in memory
-								size	-=	2;				// Reduce number of bytes to write by two
-							} while (size);					// Loop until all bytes written
-
-							boot_page_write(tempaddress);
-							boot_spm_busy_wait();
-							boot_rww_enable();				// Re-enable the RWW section
-						}
-						else
-						{
-							//*	issue 543, this should work, It has not been tested.
-							uint16_t ii = address >> 1;
-							/* write EEPROM */
-							while (size) {
-								eeprom_write_byte((uint8_t*)ii, *p++);
-								address+=2;						// Select next EEPROM byte
-								ii++;
-								size--;
-							}
-						}
+						sendchar(0x54);
+						sendchar(msgBuffer[1]);
+						sendchar(msgBuffer[2]);
+						sendchar(msgBuffer[3]);
+						sendchar(msgBuffer[4]);
+						sendchar(0x45);
+		#if defined(RAMPZ)
+						address	=	( ((address_t)(msgBuffer[1])<<24)|((address_t)(msgBuffer[2])<<16)|((address_t)(msgBuffer[3])<<8)|(msgBuffer[4]) )<<1;
+		#else
+						address	=	( ((msgBuffer[3])<<8)|(msgBuffer[4]) )<<1;		//convert word to byte address
+		#endif
 						msgLength		=	2;
 						msgBuffer[1]	=	STATUS_CMD_OK;
+						break;
 					}
-							break;
-				}
+
+					case CMD_PROGRAM_FLASH_ISP:
+					case CMD_PROGRAM_EEPROM_ISP:
+						{
+							unsigned int	size	=	((msgBuffer[1])<<8) | msgBuffer[2];
+							unsigned char	*p	=	msgBuffer+10;
+							// unsigned char *p = dummyArray;
+							unsigned int	data;
+							unsigned char	highByte, lowByte;
+							address_t		tempaddress	=	address;
 
 
 
 
+							if ( msgBuffer[0] == CMD_PROGRAM_FLASH_ISP )
+							{
+								// erase only main section (bootloader protection)
+								if (eraseAddress < APP_END )
+								{
+									boot_page_erase(eraseAddress);	// Perform page erase
+									boot_spm_busy_wait();		// Wait until the memory is erased.
+									eraseAddress += SPM_PAGESIZE;	// point to next page to be erase
+								}
+
+								/* Write FLASH */
+								do {
+									lowByte		=	*p++;
+									highByte 	=	*p++;
+
+									data		=	(highByte << 8) | lowByte;
+									boot_page_fill(address,data);
+
+									address	=	address + 2;	// Select next word in memory
+									size	-=	2;				// Reduce number of bytes to write by two
+								} while (size);					// Loop until all bytes written
+
+								boot_page_write(tempaddress);
+								boot_spm_busy_wait();
+								boot_rww_enable();				// Re-enable the RWW section
+							}
+							else
+							{
+								//*	issue 543, this should work, It has not been tested.
+								uint16_t ii = address >> 1;
+								/* write EEPROM */
+								while (size) {
+									eeprom_write_byte((uint8_t*)ii, *p++);
+									address+=2;						// Select next EEPROM byte
+									ii++;
+									size--;
+								}
+							}
+							msgLength		=	2;
+							msgBuffer[1]	=	STATUS_CMD_OK;
+						}
+						break;
 				case CMD_READ_FLASH_ISP:
 				case CMD_READ_EEPROM_ISP:
 					{
@@ -1835,16 +1883,11 @@ union{
 
 
 			aes_encrypt(aes_buffer, receivedPacket, finalResponseSize);
-			sendchar(0x58);
+			sendchar(SOTA_MESSAGE_START);
 			sendchar((finalResponseSize>>8)&0xFF);
 			sendchar(finalResponseSize&0x00FF);
 			for(int i =0; i<finalResponseSize; i++)
 			sendchar(aes_buffer[i]);
-			// sendchar(0x58);
-			// sendchar((finalResponseSize>>8)&0xFF);
-			// sendchar(finalResponseSize&0x00FF);
-			// for(int i =0; i<finalResponseSize; i++)
-			// sendchar(aes_buffer[i]);
 
 		#ifndef REMOVE_BOOTLOADER_LED
 			//*	<MLS>	toggle the LED
