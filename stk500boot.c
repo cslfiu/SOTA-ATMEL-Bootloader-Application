@@ -1176,6 +1176,7 @@ void (*app_start)(void) = 0x0000;
 address_t		address			=	0;
 
 #define AUTHENTICATION
+#define SEQUENCE_NUMBER_ENFORCEMENT;
 
 int main(void)
 {
@@ -1372,22 +1373,22 @@ int main(void)
 						break;
 					}
 					case ST_GET_SEQ_NUM:{
-					// #ifdef _FIX_ISSUE_505_
-						seqNum			=	c;
-						msgParseState	=	ST_MSG_SIZE_1;
-						checksum		^=	c;
-					// #else
-						// if ( (c == 1) || (c == seqNum) )
-						// {
-						// 	seqNum			=	c;
-						// 	msgParseState	=	ST_MSG_SIZE_1;
-						// 	checksum		^=	c;
-						// }
-						// else
-						// {
-						// 	msgParseState	=	ST_START;
-						// }
-					// #endif
+						// #ifdef SEQUENCE_NUMBER_ENFORCEMENT
+						if ( (c == 1) || (c == seqNum) )
+						{
+							seqNum			=	c;
+							msgParseState	=	ST_MSG_SIZE_1;
+							checksum		^=	c;
+						}
+						else
+						{
+							msgParseState	=	ST_START;
+						}
+					 // 		 #else
+						// seqNum			=	c;
+						// msgParseState	=	ST_MSG_SIZE_1;
+						// checksum		^=	c;
+					 // #endif
 						break;
 					}
 
@@ -1495,8 +1496,8 @@ union{
 					}
 					else
 					{
-							msgBuffer[0] = STATUS_CMD_FAILED;
-							msgLength = 1;
+							msgBuffer[1] = STATUS_CMD_FAILED;
+							msgLength = 2;
 							isAuthenticated = 0;
 
 					}
@@ -1584,7 +1585,7 @@ union{
 				else
 				{
 					msgBuffer[1] 	=	STATUS_CMD_FAILED;
-					msgLength		=	1;
+					msgLength		=	2;
 				}
 					break;
 				}
@@ -1620,17 +1621,28 @@ union{
 					break;
 
 				case CMD_LEAVE_PROGMODE_ISP:{
-
+	 if(isAuthenticated == 1){
 					isLeave	=	1;
 					msgLength		=	2;
 					msgBuffer[1]	=	STATUS_CMD_OK;
-					break;
+				}
+				else
+				{
+					msgBuffer[1] 	=	STATUS_CMD_FAILED;
+					msgLength		=	2;
+				}
+				break;
 				}
 				case CMD_SET_PARAMETER:
 				case CMD_ENTER_PROGMODE_ISP:{
 				if(isAuthenticated == 1){
 					msgLength		=	2;
 					msgBuffer[1]	=	STATUS_CMD_OK;
+				}
+				else
+				{
+					msgBuffer[1] 	=	STATUS_CMD_FAILED;
+					msgLength		=	2;
 				}
 					break;
 				}
@@ -1706,12 +1718,7 @@ union{
 
 					case CMD_LOAD_ADDRESS:
 					{
-						sendchar(0x54);
-						sendchar(msgBuffer[1]);
-						sendchar(msgBuffer[2]);
-						sendchar(msgBuffer[3]);
-						sendchar(msgBuffer[4]);
-						sendchar(0x45);
+							if(isAuthenticated == 1){
 		#if defined(RAMPZ)
 						address	=	( ((address_t)(msgBuffer[1])<<24)|((address_t)(msgBuffer[2])<<16)|((address_t)(msgBuffer[3])<<8)|(msgBuffer[4]) )<<1;
 		#else
@@ -1719,21 +1726,25 @@ union{
 		#endif
 						msgLength		=	2;
 						msgBuffer[1]	=	STATUS_CMD_OK;
+					}
+					else
+					{
+						msgBuffer[1] 	=	STATUS_CMD_FAILED;
+						msgLength		=	2;
+					}
 						break;
 					}
 
 					case CMD_PROGRAM_FLASH_ISP:
 					case CMD_PROGRAM_EEPROM_ISP:
 						{
+								if(isAuthenticated == 1){
 							unsigned int	size	=	((msgBuffer[1])<<8) | msgBuffer[2];
 							unsigned char	*p	=	msgBuffer+10;
 							// unsigned char *p = dummyArray;
 							unsigned int	data;
 							unsigned char	highByte, lowByte;
 							address_t		tempaddress	=	address;
-
-
-
 
 							if ( msgBuffer[0] == CMD_PROGRAM_FLASH_ISP )
 							{
@@ -1776,7 +1787,14 @@ union{
 							msgLength		=	2;
 							msgBuffer[1]	=	STATUS_CMD_OK;
 						}
+						else
+						{
+							msgBuffer[1] 	=	STATUS_CMD_FAILED;
+							msgLength		=	2;
+						}
 						break;
+						}
+
 				case CMD_READ_FLASH_ISP:
 				case CMD_READ_EEPROM_ISP:
 					{
