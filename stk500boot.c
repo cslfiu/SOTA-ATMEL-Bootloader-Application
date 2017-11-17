@@ -1373,7 +1373,7 @@ int main(void)
 						break;
 					}
 					case ST_GET_SEQ_NUM:{
-						// #ifdef SEQUENCE_NUMBER_ENFORCEMENT
+						#ifdef SEQUENCE_NUMBER_ENFORCEMENT
 						if ( (c == 1) || (c == seqNum) )
 						{
 							seqNum			=	c;
@@ -1384,11 +1384,13 @@ int main(void)
 						{
 							msgParseState	=	ST_START;
 						}
-					 // 		 #else
-						// seqNum			=	c;
-						// msgParseState	=	ST_MSG_SIZE_1;
-						// checksum		^=	c;
-					 // #endif
+
+
+					 	#else
+						seqNum			=	c;
+						msgParseState	=	ST_MSG_SIZE_1;
+						checksum		^=	c;
+					 #endif
 						break;
 					}
 
