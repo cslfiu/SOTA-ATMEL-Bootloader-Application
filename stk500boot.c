@@ -1168,6 +1168,10 @@ void (*app_start)(void) = 0x0000;
 	unsigned char authenticationToken[4] = {0x53, 0xef, 0x34,0x23};
  	unsigned char isAuthenticated = 0;
 	unsigned int  packetSize = 0;
+	unsigned char	seqNum			=	0x00;
+	unsigned char   isLeave = 0;
+
+	unsigned char	c, *p;
   union {
 	uint32_t  authenticationNumber;
 	uint8_t authBytes[4];
@@ -1190,7 +1194,7 @@ int main(void)
 	unsigned char	msgParseState;
 	unsigned int	ii				=	0;
 	unsigned char	checksum		=	0;
-	unsigned char	seqNum			=	0;
+
 	unsigned int	msgLength		=	0;
 	unsigned char	msgBuffer[285];
 
@@ -1200,9 +1204,7 @@ int main(void)
 	unsigned int receivedPacketIndex = 0;
 
 	//unsigned char msgBuffer[290];
-	unsigned long int 	sequenceNumber = 0;
-	unsigned char	c, *p;
-	unsigned char   isLeave = 0;
+
 	unsigned long	boot_timeout;
 	unsigned long	boot_timer;
 	unsigned int	boot_state;
@@ -1373,8 +1375,8 @@ int main(void)
 						break;
 					}
 					case ST_GET_SEQ_NUM:{
-						#ifdef SEQUENCE_NUMBER_ENFORCEMENT
-						if ( (c == 1) || (c == seqNum) )
+						// #ifdef SEQUENCE_NUMBER_ENFORCEMENT
+						if ( (c == seqNum) )
 						{
 							seqNum			=	c;
 							msgParseState	=	ST_MSG_SIZE_1;
@@ -1382,15 +1384,24 @@ int main(void)
 						}
 						else
 						{
-							msgParseState	=	ST_START;
+							sendchar(0x99);
+							sendchar(c);
+							sendchar(0x98);
+							sendchar(seqNum);
+							sendchar(0x94);
+							sendchar(0x99);
+							//msgLength		=	2;
+							//msgBuffer[1]	=	STATUS_CMD_OK;
+							msgParseState	=	ST_PROCESS;
+							msgBuffer[0] = 0x11;
 						}
 
 
-					 	#else
-						seqNum			=	c;
-						msgParseState	=	ST_MSG_SIZE_1;
-						checksum		^=	c;
-					 #endif
+					 // 	#else
+						// seqNum			=	c;
+						// msgParseState	=	ST_MSG_SIZE_1;
+						// checksum		^=	c;
+					 // #endif
 						break;
 					}
 
@@ -1428,6 +1439,7 @@ int main(void)
 					{
 						msgBuffer[ii++]	=	c;
 						checksum		^=	c;
+
 						if (ii == msgLength )
 						{
 							msgParseState	=	ST_GET_CHECK;
