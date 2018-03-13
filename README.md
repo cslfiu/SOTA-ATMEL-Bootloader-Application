@@ -1,4 +1,4 @@
-# SOTA-ATMEL-Bootloader-And-Client-Appllication
+# SOTA-ATMEL-Bootloader-And-Client-Application
 > *Yet Another Component of The SOTA Framework*
 
 A Bootloader and A Client Application for ATMEL micro-controllers. **stk500boot.c** C file contains the SOTA Communication Protocol as well as new version of the STK500 V2 Communication Protocol. Finally ATMEL 8 micro-controllers can be programmed over-the-air in secure way. It supports data confidentiality, integratiy, and authentication.
