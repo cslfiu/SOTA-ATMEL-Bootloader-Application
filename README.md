@@ -29,7 +29,7 @@ Let's assume that you are going to compile the SOTA Communication Protocol for A
 
 After that it will generate **stk500boot_v2_mega2560.hex** named hex file that contains the SOTA bootloader.
 
-**You need to use the SOTA framework with automatic over-the-air feature, you need to be able to reboot your device automatically. In the other words, you need to integrate** [the SOTA Skelethon Code](https://github.com/cslfiu/The-SOTA-Skeleton-Code-for-Client "the SOTA Skelethon Code")  **into your IoT application. In doing so, whenever you want program your micro-controller,it automatically reboot itself to load the bootloader section.**
+**You need to use the SOTA framework with automatic over-the-air feature, you need to be able to reboot your device automatically. In the other words, you need to integrate** [the SOTA Skelethon Code](https://github.com/cslfiu/SOTA-Skeleton-Code-for-Client "the SOTA Skelethon Code")  **into your IoT application. In doing so, whenever you want program your micro-controller,it automatically reboot itself to load the bootloader section.**
 
 If you don't want to compile the bootloader, you can download precompiled hex bootloader hex file under releases section in this repository.
 
