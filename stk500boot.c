@@ -1165,17 +1165,30 @@ void (*app_start)(void) = 0x0000;
 
 //*****************************************************************************
 
-	unsigned char authenticationToken[4] = {0x53, 0xef, 0x34,0x23};
+	unsigned char authenticationPreSharedToken[4] = {0x53, 0xef, 0x34,0x23};
+        // unsigned char authenticationSecretKey[4] = {0x45,0xaf,0x32,0x21};
  	unsigned char isAuthenticated = 0;
 	unsigned int  packetSize = 0;
 	unsigned char	seqNum			=	0x00;
 	unsigned char   isLeave = 0;
+	unsigned char	msgParseState;
+
 
 	unsigned char	c, *p;
   union {
 	uint32_t  authenticationNumber;
 	uint8_t authBytes[4];
 }authenticationNumber;
+
+union {
+uint32_t  secretKey;
+uint8_t secretKeyBytes[4];
+}secretKey;
+
+union {
+uint32_t  randomGeneratedKey;
+uint8_t randomGeneratedKeyBytes[4];
+}randomGeneratedKey;
 
 address_t		address			=	0;
 
@@ -1191,12 +1204,21 @@ int main(void)
   int packetRetrieveIndex = 0;
 
 	address_t		eraseAddress	=	0;
-	unsigned char	msgParseState;
 	unsigned int	ii				=	0;
 	unsigned char	checksum		=	0;
 
 	unsigned int	msgLength		=	0;
 	unsigned char	msgBuffer[285];
+
+	secretKey.secretKeyBytes[0] = 0x45;
+	secretKey.secretKeyBytes[1] = 0xaf;
+	secretKey.secretKeyBytes[2] = 0x32;
+	secretKey.secretKeyBytes[3] = 0x21;
+
+	randomGeneratedKey.randomGeneratedKeyBytes[0] = 0x23;
+	randomGeneratedKey.randomGeneratedKeyBytes[1] = 0x24;
+	randomGeneratedKey.randomGeneratedKeyBytes[2] = 0x25;
+	randomGeneratedKey.randomGeneratedKeyBytes[3] = 0x26;
 
 
 	unsigned int finalResponseSize;
@@ -1487,7 +1509,9 @@ union{
 				case CMD_AUTH:
 				{
 
-					if((msgBuffer[5] == authenticationToken[0]) && (msgBuffer[6] == authenticationToken[1]) && (msgBuffer[7] == authenticationToken[2]) && (msgBuffer[8] == authenticationToken[3]))
+				  // authenticationPreSharedToken authenticationSecretKey
+
+					if((msgBuffer[5] == authenticationPreSharedToken[0]) && (msgBuffer[6] == authenticationPreSharedToken[1]) && (msgBuffer[7] == authenticationPreSharedToken[2]) && (msgBuffer[8] == authenticationPreSharedToken[3]))
 					{
 						authenticationNumber.authBytes[0] = msgBuffer[1];
 						authenticationNumber.authBytes[1] = msgBuffer[2];
@@ -1497,14 +1521,51 @@ union{
 						//PrintDecInt((uint32_t)msgBuffer[4]);
 						uint32_t number = (((uint32_t)msgBuffer[4])); // i dont have any idea why it's working.
 
-						authenticationNumber.authenticationNumber = authenticationNumber.authenticationNumber +  number;
+						authenticationNumber.authenticationNumber = authenticationNumber.authenticationNumber +  secretKey.secretKey;
 
 						msgBuffer[0] = STATUS_CMD_OK;
 						msgBuffer[1] = authenticationNumber.authBytes[0];
 						msgBuffer[2] = authenticationNumber.authBytes[1];
+						msgBuffer[3] = authenticationNumber.authBytes[2];
 						msgBuffer[4] = authenticationNumber.authBytes[3];
+						msgBuffer[5] = randomGeneratedKey.randomGeneratedKeyBytes[0];
+						msgBuffer[6] = randomGeneratedKey.randomGeneratedKeyBytes[1];
+						msgBuffer[7] = randomGeneratedKey.randomGeneratedKeyBytes[2];
+						msgBuffer[8] = randomGeneratedKey.randomGeneratedKeyBytes[3];
 
-						msgLength = 5;
+						msgLength = 9;
+					}
+					else
+					{
+							msgBuffer[1] = STATUS_CMD_FAILED;
+							msgLength = 2;
+
+
+					}
+					break;
+				}
+
+				case CMD_AUTH_SECOND_PHASE:
+				{
+
+					// authenticationPreSharedToken authenticationSecretKey
+
+					if((msgBuffer[5] == authenticationPreSharedToken[0]) && (msgBuffer[6] == authenticationPreSharedToken[1]) && (msgBuffer[7] == authenticationPreSharedToken[2]) && (msgBuffer[8] == authenticationPreSharedToken[3]))
+					{
+						authenticationNumber.authBytes[0] = msgBuffer[1];
+						authenticationNumber.authBytes[1] = msgBuffer[2];
+						authenticationNumber.authBytes[2] = msgBuffer[3];
+						authenticationNumber.authBytes[3] = msgBuffer[4];
+
+						//PrintDecInt((uint32_t)msgBuffer[4]);
+
+						randomGeneratedKey.randomGeneratedKey = randomGeneratedKey.randomGeneratedKey +  secretKey.secretKey;
+
+						if(randomGeneratedKey.randomGeneratedKey == authenticationNumber.authenticationNumber)
+						{
+							msgBuffer[0] = STATUS_CMD_OK;
+						}
+						msgLength = 1;
 						isAuthenticated = 1;
 
 					}
@@ -1517,6 +1578,8 @@ union{
 					}
 					break;
 				}
+
+
 	// #endif
 	#ifndef REMOVE_CMD_SPI_MULTI
 				case CMD_SPI_MULTI:

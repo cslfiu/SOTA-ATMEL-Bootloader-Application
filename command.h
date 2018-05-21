@@ -116,4 +116,5 @@
 // *****************[ SOTA protocol commands ]***************************
 
 #define CMD_AUTH                            0x67
+#define CMD_AUTH_SECOND_PHASE               0x68
 #define SOTA_MESSAGE_START                  0x58
